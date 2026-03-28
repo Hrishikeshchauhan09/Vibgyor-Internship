@@ -5,10 +5,10 @@ const Categories = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState({ open: false, mode: 'create', data: null });
+  const [deleteModal, setDeleteModal] = useState({ open: false, data: null });
   const [form, setForm] = useState({ category_name: '', description: '' });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [deleteWarning, setDeleteWarning] = useState(null);
 
   const fetchCategories = async () => {
     try {
@@ -56,20 +56,17 @@ const Categories = () => {
     }
   };
 
-  const handleDelete = async (cat) => {
-    setDeleteWarning(null);
+  const confirmDelete = async () => {
+    if (!deleteModal.data) return;
     try {
-      await API.delete(`/categories/${cat.category_id}`);
+      await API.delete(`/categories/${deleteModal.data.category_id}`);
       setSuccess('Category deactivated successfully!');
       fetchCategories();
+      setDeleteModal({ open: false, data: null });
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      // Product count warning from backend
-      if (err.response?.status === 409) {
-        setDeleteWarning({ message: err.response.data.message, cat });
-      } else {
-        setError(err.response?.data?.message || 'Failed to deactivate.');
-      }
+      setError(err.response?.data?.message || 'Failed to deactivate.');
+      setDeleteModal({ open: false, data: null });
     }
   };
 
@@ -85,16 +82,8 @@ const Categories = () => {
         <button id="create-category-btn" className="btn btn-primary" onClick={openCreate}>+ New Category</button>
       </div>
 
-      {success && <div className="alert alert-success">{success}</div>}
-      {error && <div className="alert alert-error">{error}</div>}
-
-      {/* Delete Warning */}
-      {deleteWarning && (
-        <div className="alert alert-warning" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span>⚠️ {deleteWarning.message}</span>
-          <button className="btn btn-sm btn-danger" onClick={() => setDeleteWarning(null)}>Dismiss</button>
-        </div>
-      )}
+      {success && <div className="alert alert-success" role="status" aria-live="polite">{success}</div>}
+      {error && <div className="alert alert-error" role="alert" aria-live="assertive">{error}</div>}
 
       <div className="card">
         <div className="table-wrapper">
@@ -127,9 +116,9 @@ const Categories = () => {
                     </td>
                     <td>{new Date(cat.created_at).toLocaleDateString('en-IN')}</td>
                     <td style={{ display: 'flex', gap: '0.5rem' }}>
-                      <button className="btn btn-secondary btn-sm" onClick={() => openEdit(cat)}>✏️ Edit</button>
+                      <button className="btn btn-secondary btn-sm" aria-label={`Edit ${cat.category_name}`} onClick={() => openEdit(cat)}>✏️ Edit</button>
                       {cat.status && (
-                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(cat)}>🗑️ Deactivate</button>
+                        <button className="btn btn-danger btn-sm" aria-label={`Deactivate ${cat.category_name}`} onClick={() => setDeleteModal({ open: true, data: cat })}>🗑️ Deactivate</button>
                       )}
                     </td>
                   </tr>
@@ -175,12 +164,43 @@ const Categories = () => {
                 />
               </div>
               <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
-                <button type="button" className="btn btn-secondary" onClick={closeModal}>Cancel</button>
-                <button id="category-form-submit" type="submit" className="btn btn-primary">
+                <button type="button" className="btn btn-secondary" onClick={closeModal} aria-label="Cancel editing">Cancel</button>
+                <button id="category-form-submit" type="submit" className="btn btn-primary" aria-label="Save category">
                   {modal.mode === 'create' ? 'Create Category' : 'Save Changes'}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Accessible Deactivation Warning Modal */}
+      {deleteModal.open && (
+        <div className="modal-overlay" onClick={() => setDeleteModal({ open: false, data: null })} role="dialog" aria-modal="true" aria-labelledby="delete-dialog-title">
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '400px', borderTop: '4px solid var(--danger)' }}>
+            <div className="modal-header">
+              <h3 id="delete-dialog-title" className="modal-title" style={{ color: 'var(--danger)' }}>⚠️ Deactivate Category?</h3>
+              <button className="modal-close" onClick={() => setDeleteModal({ open: false, data: null })} aria-label="Close dialog">×</button>
+            </div>
+            
+            <div style={{ padding: '1rem 0' }}>
+              <p style={{ marginBottom: '1rem' }}>Are you sure you want to deactivate <strong>{deleteModal.data?.category_name}</strong>?</p>
+              
+              {(deleteModal.data?.product_count > 0) ? (
+                <div role="alert" style={{ background: '#fff3cd', color: '#856404', padding: '1rem', borderRadius: 'var(--radius-sm)', borderLeft: '4px solid #ffeeba', fontSize: '0.9rem', lineHeight: '1.4' }}>
+                  <strong>Warning:</strong> This category currently contains <strong>{deleteModal.data.product_count} active products</strong>. Deactivating this category will hide these products from customers.
+                </div>
+              ) : (
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>This category has no active products. Customers will no longer see it.</p>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
+              <button type="button" className="btn btn-secondary" onClick={() => setDeleteModal({ open: false, data: null })} aria-label="Cancel deactivation">Close</button>
+              <button type="button" className="btn" style={{ background: 'var(--danger)', color: 'white', fontWeight: 'bold' }} onClick={confirmDelete} aria-label="Confirm deactivation">
+                Yes, Deactivate
+              </button>
+            </div>
           </div>
         </div>
       )}

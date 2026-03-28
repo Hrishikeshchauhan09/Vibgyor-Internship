@@ -2,9 +2,20 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../config/db');
+const { verifyAdmin } = require('../middleware/auth');
 require('dotenv').config();
 
 const router = express.Router();
+
+// GET /api/auth/users -> list all employees/users (for admin)
+router.get('/users', verifyAdmin, async (req, res) => {
+  try {
+    const [users] = await db.query("SELECT user_id, name, email, role, created_at FROM users WHERE role = 'admin' ORDER BY created_at DESC");
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching users.' });
+  }
+});
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {

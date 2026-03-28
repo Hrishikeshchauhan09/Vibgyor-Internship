@@ -1,11 +1,18 @@
+import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Layout = () => {
   const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const handleLogout = () => {
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = () => {
+    setShowLogoutModal(false);
     logout();
     navigate('/login');
   };
@@ -36,14 +43,14 @@ const Layout = () => {
             <NavLink to="/orders" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
               <span className="nav-icon">📋</span> Orders
             </NavLink>
-            <NavLink to="/leaves" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-              <span className="nav-icon">📅</span> Leave Requests
-            </NavLink>
           </div>
 
           {isAdmin() && (
             <div className="nav-section">
               <div className="nav-section-title">HR / Admin</div>
+              <NavLink to="/leaves" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                <span className="nav-icon">📅</span> Leave Requests
+              </NavLink>
               <NavLink to="/categories" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
                 <span className="nav-icon">🏷️</span> Categories
               </NavLink>
@@ -68,6 +75,31 @@ const Layout = () => {
       <main className="main-content">
         <Outlet />
       </main>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div className="modal-overlay" onClick={() => setShowLogoutModal(false)} role="dialog" aria-modal="true" aria-labelledby="logout-title" style={{ zIndex: 9999 }}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '350px', textAlign: 'center', padding: '2rem', borderTop: '4px solid var(--danger)' }}>
+            {isAdmin() ? (
+              <>
+                <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>🛡️</div>
+                <h3 id="logout-title" style={{ marginBottom: '1rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>End Admin Session?</h3>
+                <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', fontSize: '0.9rem', lineHeight: '1.5' }}>Are you sure you want to securely log out of the ShopVibe Administrative Console?</p>
+              </>
+            ) : (
+              <>
+                <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>👋</div>
+                <h3 id="logout-title" style={{ marginBottom: '1rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>Leaving so soon?</h3>
+                <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', fontSize: '0.9rem', lineHeight: '1.5' }}>Are you sure you want to log out of your ShopVibe account?</p>
+              </>
+            )}
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+              <button className="btn btn-secondary" onClick={() => setShowLogoutModal(false)} style={{ flex: 1, justifyContent: 'center' }}>Cancel</button>
+              <button className="btn btn-danger" onClick={confirmLogout} style={{ flex: 1, justifyContent: 'center' }}>Yes, Log Out</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
