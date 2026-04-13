@@ -19,7 +19,9 @@ const Login = () => {
     try {
       const { data } = await API.post('/auth/login', form);
       login(data.user, data.token);
-      navigate('/dashboard');
+      if (data.user.role === 'admin') navigate('/dashboard');
+      else if (data.user.role === 'employee') navigate('/employee-dashboard');
+      else navigate('/products');
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please try again.');
     } finally {

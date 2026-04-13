@@ -24,6 +24,7 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/leaves', require('./routes/leaves'));
+app.use('/api/attendance', require('./routes/attendance'));
 
 // Health check
 app.get('/', (req, res) => {

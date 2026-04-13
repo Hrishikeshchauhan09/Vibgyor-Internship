@@ -9,6 +9,7 @@ const Dashboard = () => {
   const [orders, setOrders] = useState([]);
   const [activities, setActivities] = useState([]);
   const [staff, setStaff] = useState([]);
+  const [globalAttendance, setGlobalAttendance] = useState([]);
   const [showAttendance, setShowAttendance] = useState(false);
   const [loadingStaff, setLoadingStaff] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -19,7 +20,7 @@ const Dashboard = () => {
         const promises = [
           API.get('/products'),
           API.get('/categories'),
-          API.get('/orders'),
+          isAdmin() ? API.get('/orders/all') : API.get('/orders'),
           API.get('/cart')
         ];
         if (isAdmin()) promises.push(API.get('/leaves'));
@@ -73,10 +74,15 @@ const Dashboard = () => {
     if (staff.length === 0) {
       setLoadingStaff(true);
       try {
-        const { data } = await API.get('/auth/users');
-        setStaff(data);
+        const [usersRes, attRes] = await Promise.all([
+          API.get('/auth/users'),
+          API.get('/attendance/all')
+        ]);
+        const activeStaff = usersRes.data.filter(u => u.account_status !== 'terminated');
+        setStaff(activeStaff);
+        setGlobalAttendance(attRes.data);
       } catch (err) {
-        console.error("Failed to load staff", err);
+        console.error("Failed to load data", err);
       } finally {
         setLoadingStaff(false);
       }
@@ -216,7 +222,7 @@ const Dashboard = () => {
                   <div>
                     <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Attendance Rate Today</div>
                     <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--success)' }}>
-                      {Math.round((staff.filter(u => (u.user_id + new Date().getDate()) % 15 !== 0).length / Math.max(staff.length, 1)) * 100)}%
+                      {staff.length > 0 ? Math.round((globalAttendance.length / staff.length) * 100) : 0}%
                     </div>
                   </div>
                   <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
@@ -240,10 +246,11 @@ const Dashboard = () => {
                     </thead>
                     <tbody>
                       {staff.map((employee) => {
-                        // Deterministic mock status using ID and current Day so it safely persists today
-                        const isPresent = (employee.user_id + new Date().getDate()) % 15 !== 0; 
-                        const checkInTime = isPresent ? `09:${(employee.user_id * 7 % 60).toString().padStart(2, '0')} AM` : '—';
-                        const checkOutTime = isPresent ? `06:${(employee.user_id * 13 % 60).toString().padStart(2, '0')} PM` : '—';
+                        const rec = globalAttendance.find(a => a.user_id === employee.user_id);
+                        const isPresent = !!rec; 
+                        const formatTime = (iso) => new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                        const checkInTime = isPresent && rec.check_in ? formatTime(rec.check_in) : '—';
+                        const checkOutTime = isPresent && rec.check_out ? formatTime(rec.check_out) : '—';
                         return (
                           <tr key={employee.user_id} style={{ background: isPresent ? 'transparent' : '#fff5f5' }}>
                             <td>

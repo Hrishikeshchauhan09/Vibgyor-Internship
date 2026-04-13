@@ -3,7 +3,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Layout = () => {
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, isAdmin, isEmployee } = useAuth();
   const navigate = useNavigate();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
@@ -29,25 +29,44 @@ const Layout = () => {
         </div>
 
         <nav className="sidebar-nav">
-          <div className="nav-section">
-            <div className="nav-section-title">Main</div>
-            <NavLink to="/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-              <span className="nav-icon">📊</span> Dashboard
-            </NavLink>
-            <NavLink to="/products" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-              <span className="nav-icon">📦</span> Products
-            </NavLink>
-            <NavLink to="/cart" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-              <span className="nav-icon">🛒</span> Cart
-            </NavLink>
-            <NavLink to="/orders" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-              <span className="nav-icon">📋</span> Orders
-            </NavLink>
-          </div>
+          {!isEmployee() && (
+            <div className="nav-section">
+              <div className="nav-section-title">Main</div>
+              {isAdmin() && (
+                <NavLink to="/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                  <span className="nav-icon">📊</span> Dashboard
+                </NavLink>
+              )}
+              <NavLink to="/products" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                <span className="nav-icon">📦</span> Products
+              </NavLink>
+              <NavLink to="/cart" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                <span className="nav-icon">🛒</span> Cart
+              </NavLink>
+              <NavLink to="/orders" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                <span className="nav-icon">📋</span> Orders
+              </NavLink>
+            </div>
+          )}
+
+          {isEmployee() && (
+            <div className="nav-section">
+              <div className="nav-section-title">Employee Portal</div>
+              <NavLink to="/employee-dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                <span className="nav-icon">📊</span> My Dashboard
+              </NavLink>
+              <NavLink to="/leaves" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                <span className="nav-icon">📅</span> Leave Requests
+              </NavLink>
+            </div>
+          )}
 
           {isAdmin() && (
             <div className="nav-section">
               <div className="nav-section-title">HR / Admin</div>
+              <NavLink to="/admin/staff" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                <span className="nav-icon">👥</span> Manage Staff
+              </NavLink>
               <NavLink to="/leaves" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
                 <span className="nav-icon">📅</span> Leave Requests
               </NavLink>
