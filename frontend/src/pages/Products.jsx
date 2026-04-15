@@ -44,6 +44,17 @@ const Products = () => {
     }
   };
 
+  const addToWishlist = async (productId) => {
+    try {
+      await API.post('/wishlist', { product_id: productId });
+      setCartMsg('Added to wishlist! ❤️');
+      setTimeout(() => setCartMsg(''), 2500);
+    } catch (err) {
+      setCartMsg(err.response?.data?.message || 'Failed to add to wishlist.');
+      setTimeout(() => setCartMsg(''), 2500);
+    }
+  };
+
   const filtered = products.filter(p =>
     p.name.toLowerCase().includes(search.toLowerCase()) ||
     (p.category_name || '').toLowerCase().includes(search.toLowerCase())
@@ -111,8 +122,18 @@ const Products = () => {
                     ? <span style={{ color: 'var(--success)' }}>✓ In Stock ({product.stock})</span>
                     : <span style={{ color: 'var(--danger)' }}>✗ Out of Stock</span>}
                 </div>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
                   <Link to={`/products/${product.product_id}`} className="btn btn-secondary btn-sm" style={{ flex: 1, justifyContent: 'center' }}>Details</Link>
+                  <button
+                    className="btn btn-secondary btn-sm"
+                    style={{ padding: '0.25rem 0.5rem', background: '#ffebee', color: '#e53935', borderColor: '#ffcdd2' }}
+                    onClick={() => addToWishlist(product.product_id)}
+                    title="Add to Wishlist"
+                  >
+                    ❤️
+                  </button>
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <button
                     className="btn btn-primary btn-sm"
                     style={{ flex: 1, justifyContent: 'center' }}

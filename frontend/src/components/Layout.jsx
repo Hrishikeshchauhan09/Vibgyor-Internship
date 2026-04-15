@@ -43,6 +43,9 @@ const Layout = () => {
               <NavLink to="/cart" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
                 <span className="nav-icon">🛒</span> Cart
               </NavLink>
+              <NavLink to="/wishlist" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                <span className="nav-icon">❤️</span> Wishlist
+              </NavLink>
               <NavLink to="/orders" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
                 <span className="nav-icon">📋</span> Orders
               </NavLink>

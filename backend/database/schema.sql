@@ -62,6 +62,19 @@ CREATE TABLE IF NOT EXISTS cart (
 );
 
 -- ============================================================
+-- Table: wishlist
+-- ============================================================
+CREATE TABLE IF NOT EXISTS wishlist (
+  wishlist_id INT PRIMARY KEY AUTO_INCREMENT,
+  user_id     INT NOT NULL,
+  product_id  INT NOT NULL,
+  added_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+  FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE,
+  UNIQUE KEY user_product_unique (user_id, product_id)
+);
+
+-- ============================================================
 -- Table: orders
 -- Relationship: One user -> Many orders (one-to-many as required)
 -- ============================================================
