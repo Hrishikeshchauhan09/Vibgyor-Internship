@@ -9,7 +9,19 @@ This repository is structured into a React client and a highly available REST AP
 - **Frontend:** React.js, Vite
 - **Backend:** Node.js, Express.js
 - **Database:** MySQL
+- **Cloud Hosting:** Render (Frontend/Backend) & Aiven (MySQL)
 - **Authentication:** JSON Web Tokens (JWT)
+
+## Live Deployment
+
+This project is fully deployed to the cloud!
+- **Frontend:** [Render Static Site](https://render.com)
+- **Backend API:** [Render Web Service](https://render.com)
+- **Database:** Aiven Free MySQL
+
+To test the live application as an administrator, use:
+- **Email:** `admin@ecommerce.com`
+- **Password:** `admin123`
 
 ## Prerequisites
 
@@ -39,10 +51,15 @@ cd backend
 npm install
 ```
 
-Create a `.env` file in the `backend` root explicitly matching your database configuration:
+Create a `.env` file in the `backend` root explicitely matching your database configuration. If running the cloud database, use your Aiven credentials:
 ```env
-DB_PASSWORD=your_mysql_password
 PORT=5000
+DB_HOST=mysql-xxxx-aivencloud.com
+DB_PORT=25732
+DB_USER=avnadmin
+DB_PASSWORD=your_mysql_password
+DB_NAME=ecommerce_db
+JWT_SECRET=vibgyor_ecommerce_jwt_secret_2026
 ```
 
 Boot the Node server process:
