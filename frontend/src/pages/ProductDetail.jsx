@@ -1,21 +1,39 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import API from '../api/axios';
 
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [product, setProduct] = useState(null);
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(1);
   const [msg, setMsg] = useState('');
+  
+  // Review form state
+  const [rating, setRating] = useState(5);
+  const [reviewText, setReviewText] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   useEffect(() => {
-    API.get(`/products/${id}`)
-      .then(({ data }) => setProduct(data))
-      .catch(() => navigate('/products'))
-      .finally(() => setLoading(false));
-  }, [id]);
+    const fetchData = async () => {
+      try {
+        const { data: prodData } = await API.get(`/products/${id}`);
+        setProduct(prodData);
+        
+        const { data: revData } = await API.get(`/reviews/product/${id}`);
+        setReviews(revData);
+      } catch (err) {
+        navigate('/products');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [id, navigate]);
 
   const addToCart = async () => {
     try {
@@ -24,6 +42,22 @@ const ProductDetail = () => {
       setTimeout(() => setMsg(''), 2500);
     } catch (err) {
       setMsg(err.response?.data?.message || 'Failed.');
+    }
+  };
+
+  const submitReview = async (e) => {
+    e.preventDefault();
+    setSubmittingReview(true);
+    try {
+      await API.post(`/reviews/${id}`, { rating, review_text: reviewText });
+      setMsg('Review submitted successfully! It is pending admin approval. ⭐');
+      setRating(5);
+      setReviewText('');
+    } catch (err) {
+      setMsg(err.response?.data?.message || 'Failed to submit review.');
+    } finally {
+      setSubmittingReview(false);
+      setTimeout(() => setMsg(''), 4000);
     }
   };
 
@@ -66,6 +100,72 @@ const ProductDetail = () => {
           >
             🛒 Add to Cart
           </button>
+        </div>
+      </div>
+
+      {/* Reviews Section */}
+      <div style={{ marginTop: '3rem' }}>
+        <h2 style={{ fontSize: '1.4rem', fontWeight: '700', marginBottom: '1.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>Customer Reviews</h2>
+        
+        {reviews.length > 0 ? (
+          <div style={{ display: 'grid', gap: '1.5rem', marginBottom: '3rem' }}>
+            {reviews.map(rev => (
+              <div key={rev.review_id} className="card" style={{ padding: '1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                  <div style={{ fontWeight: '600' }}>{rev.customer_name}</div>
+                  <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                    {new Date(rev.created_at).toLocaleDateString()}
+                  </div>
+                </div>
+                <div style={{ color: 'var(--warning)', letterSpacing: '2px', marginBottom: '0.5rem' }}>
+                  {'⭐'.repeat(rev.rating) + '☆'.repeat(5 - rev.rating)}
+                </div>
+                <p style={{ color: 'var(--text-primary)', lineHeight: '1.5', margin: 0 }}>{rev.review_text}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '3rem', fontStyle: 'italic' }}>No reviews yet for this product. Be the first to review!</p>
+        )}
+
+        {/* Add Review Form */}
+        <div className="card" style={{ background: 'var(--bg-light)', border: 'none' }}>
+          <h3 style={{ fontSize: '1.2rem', fontWeight: '700', marginBottom: '1rem' }}>Write a Review</h3>
+          {user ? (
+            <form onSubmit={submitReview}>
+              <div className="form-group">
+                <label>Rating</label>
+                <select 
+                  className="form-control" 
+                  value={rating} 
+                  onChange={(e) => setRating(Number(e.target.value))}
+                  style={{ width: '150px' }}
+                >
+                  <option value="5">5 Stars - Excellent</option>
+                  <option value="4">4 Stars - Good</option>
+                  <option value="3">3 Stars - Average</option>
+                  <option value="2">2 Stars - Poor</option>
+                  <option value="1">1 Star - Terrible</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Your Review</label>
+                <textarea 
+                  className="form-control" 
+                  rows="4" 
+                  value={reviewText} 
+                  onChange={(e) => setReviewText(e.target.value)}
+                  placeholder="Tell us what you think about this product..."
+                  required
+                ></textarea>
+              </div>
+              <button type="submit" className="btn btn-primary" disabled={submittingReview}>
+                {submittingReview ? 'Submitting...' : 'Submit Review'}
+              </button>
+            </form>
+          ) : (
+            <p style={{ color: 'var(--text-secondary)' }}>You must be logged in to leave a review. <a href="/login" style={{ color: 'var(--primary)', fontWeight: '600' }}>Login here</a></p>
+          )}
         </div>
       </div>
     </div>

@@ -21,6 +21,7 @@ import ManageCustomers from './pages/ManageCustomers';
 import ManagePayments from './pages/ManagePayments';
 import ManageCarts from './pages/ManageCarts';
 import ManageShipping from './pages/ManageShipping';
+import ManageReviews from './pages/ManageReviews';
 
 // Protected Route wrapper
 const ProtectedRoute = ({ children, adminOnly = false, employeeOnly = false }) => {
@@ -54,6 +55,7 @@ function AppRoutes() {
         <Route path="admin/payments" element={<ProtectedRoute adminOnly><ManagePayments /></ProtectedRoute>} />
         <Route path="admin/carts" element={<ProtectedRoute adminOnly><ManageCarts /></ProtectedRoute>} />
         <Route path="admin/shipping" element={<ProtectedRoute adminOnly><ManageShipping /></ProtectedRoute>} />
+        <Route path="admin/reviews" element={<ProtectedRoute adminOnly><ManageReviews /></ProtectedRoute>} />
         <Route path="categories" element={<ProtectedRoute adminOnly><Categories /></ProtectedRoute>} />
         <Route path="admin/products" element={<ProtectedRoute adminOnly><AdminProducts /></ProtectedRoute>} />
         <Route path="products" element={<Products />} />
