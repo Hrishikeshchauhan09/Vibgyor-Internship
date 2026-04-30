@@ -18,6 +18,7 @@ import LeaveRequests from './pages/LeaveRequests';
 import EmployeeDashboard from './pages/EmployeeDashboard';
 import ManageEmployees from './pages/ManageEmployees';
 import ManageCustomers from './pages/ManageCustomers';
+import ManagePayments from './pages/ManagePayments';
 
 // Protected Route wrapper
 const ProtectedRoute = ({ children, adminOnly = false, employeeOnly = false }) => {
@@ -48,6 +49,7 @@ function AppRoutes() {
         <Route path="employee-dashboard" element={<ProtectedRoute employeeOnly><EmployeeDashboard /></ProtectedRoute>} />
         <Route path="admin/staff" element={<ProtectedRoute adminOnly><ManageEmployees /></ProtectedRoute>} />
         <Route path="admin/customers" element={<ProtectedRoute adminOnly><ManageCustomers /></ProtectedRoute>} />
+        <Route path="admin/payments" element={<ProtectedRoute adminOnly><ManagePayments /></ProtectedRoute>} />
         <Route path="categories" element={<ProtectedRoute adminOnly><Categories /></ProtectedRoute>} />
         <Route path="admin/products" element={<ProtectedRoute adminOnly><AdminProducts /></ProtectedRoute>} />
         <Route path="products" element={<Products />} />
