@@ -21,7 +21,7 @@ router.get('/', verifyToken, async (req, res) => {
 router.get('/all', verifyAdmin, async (req, res) => {
   try {
     const [orders] = await db.query(
-      `SELECT o.*, u.name AS customer_name, u.email FROM orders o
+      `SELECT o.*, CONCAT(u.first_name, ' ', u.last_name) AS customer_name, u.email FROM orders o
        JOIN users u ON u.user_id = o.user_id ORDER BY o.created_at DESC`
     );
     res.json(orders);

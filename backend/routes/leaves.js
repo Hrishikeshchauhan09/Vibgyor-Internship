@@ -10,7 +10,7 @@ router.get('/', verifyToken, async (req, res) => {
     let query, params;
     if (req.user.role === 'admin') {
       query = `
-        SELECT l.*, u.name, u.email
+        SELECT l.*, CONCAT(u.first_name, ' ', u.last_name) AS name, u.email
         FROM leave_requests l
         JOIN users u ON u.user_id = l.user_id
         ORDER BY l.created_at DESC

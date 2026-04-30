@@ -10,8 +10,13 @@ const router = express.Router();
 // GET /api/auth/users -> list all employees/users (for admin)
 router.get('/users', verifyAdmin, async (req, res) => {
   try {
-    const [users] = await db.query("SELECT user_id, name, email, role, account_status, created_at FROM users WHERE role IN ('admin', 'employee') ORDER BY created_at DESC");
-    res.json(users);
+    const [users] = await db.query("SELECT user_id, first_name, last_name, email, role, status, created_at FROM users WHERE role IN ('admin', 'employee') ORDER BY created_at DESC");
+    const mappedUsers = users.map(u => ({
+      ...u,
+      name: `${u.first_name} ${u.last_name}`.trim(),
+      account_status: u.status ? 'active' : 'terminated'
+    }));
+    res.json(mappedUsers);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching users.' });
   }
@@ -36,10 +41,14 @@ router.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const userRole = 'customer';
 
+    const nameParts = name.trim().split(' ');
+    const firstName = nameParts[0];
+    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+
     // Insert user
     const [result] = await db.query(
-      'INSERT INTO users (name, email, password, role, created_at) VALUES (?, ?, ?, ?, NOW())',
-      [name, email, hashedPassword, userRole]
+      'INSERT INTO users (first_name, last_name, email, password, role, status, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())',
+      [firstName, lastName, email, hashedPassword, userRole, true]
     );
 
     res.status(201).json({ message: 'User registered successfully.', userId: result.insertId });
@@ -58,9 +67,14 @@ router.post('/add-staff', verifyAdmin, async (req, res) => {
     if (existing.length > 0) return res.status(409).json({ message: 'User already exists.' });
     
     const hashedPassword = await bcrypt.hash(password, 10);
+    
+    const nameParts = name.trim().split(' ');
+    const firstName = nameParts[0];
+    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+
     const [result] = await db.query(
-      'INSERT INTO users (name, email, password, role, created_at) VALUES (?, ?, ?, ?, NOW())',
-      [name, email, hashedPassword, 'employee']
+      'INSERT INTO users (first_name, last_name, email, password, role, status, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())',
+      [firstName, lastName, email, hashedPassword, 'employee', true]
     );
     res.status(201).json({ message: 'Staff created successfully.' });
   } catch (err) {
@@ -76,7 +90,8 @@ router.patch('/users/:id/status', verifyAdmin, async (req, res) => {
     if (req.user.userId === parseInt(req.params.id, 10)) {
       return res.status(400).json({ message: 'You cannot alter your own account status.' });
     }
-    await db.query('UPDATE users SET account_status = ? WHERE user_id = ?', [status, req.params.id]);
+    const dbStatus = status === 'active' ? true : false;
+    await db.query('UPDATE users SET status = ? WHERE user_id = ?', [dbStatus, req.params.id]);
     res.json({ message: 'Account status updated.' });
   } catch (err) {
     console.error(err);
@@ -114,7 +129,8 @@ router.post('/login', async (req, res) => {
     }
 
     const user = users[0];
-    if (user.account_status === 'terminated') {
+    const accStatus = user.status ? 'active' : 'terminated';
+    if (accStatus === 'terminated') {
       return res.status(403).json({ message: 'Account access has been revoked.' });
     }
 
@@ -133,7 +149,7 @@ router.post('/login', async (req, res) => {
     res.json({
       message: 'Login successful.',
       token,
-      user: { id: user.user_id, name: user.name, email: user.email, role: user.role }
+      user: { id: user.user_id, name: `${user.first_name} ${user.last_name}`.trim(), email: user.email, role: user.role, account_status: accStatus }
     });
   } catch (err) {
     console.error(err);
