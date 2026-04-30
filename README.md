@@ -81,21 +81,26 @@ The localized development client will broadcast to `http://localhost:5173`.
 
 ## Database Schema Overview
 
-The `ecommerce_db` layout ensures entity integrity supporting both retail logistics and workforce coordination.
+The `ecommerce_db` layout ensures entity integrity supporting retail logistics, workforce coordination, and customer engagement.
 
 - `users`: Core identity management providing `admin`, `employee`, and `customer` privilege escalation.
 - `categories` & `products`: Catalog infrastructure containing soft-deletion directives for referential preservation.
-- `cart`, `wishlist` & `orders`: Relational mapping of transactional states and preferences tied to authenticated user IDs.
-- `payment`: Financial history bindings supporting order workflows.
+- `carts`, `wishlist` & `orders`: Relational mapping of transactional states and preferences tied to authenticated user IDs.
+- `shipping`: Real-time logistics tracking and courier assignment records.
+- `payments`: Financial history bindings supporting order workflows and refund management.
+- `reviews`: Customer product ratings and textual feedback with moderation status.
+- `coupons`: Promotional discount codes, expiration rules, and usage tracking limits.
 - `leave_requests` & `attendance`: Human Resource sub-system storing temporal check-in limits and Paid Time Off (PTO) resolutions.
 
 ## System Features
 
 - **Role-Based Access Control (RBAC):** Middleware-level security enforcement differentiating administrative tasks, staff controls, and general consumer transactions.
+- **Advanced Order Fulfillment:** End-to-end logistics tracking, automated flat-rate shipping calculation, and dynamic status updates.
+- **Promotional Engine:** Complex coupon creation supporting flat or percentage discounts, timeframe validation, and hard usage limits.
+- **Customer Engagement:** Secure product review system featuring Admin moderation (approve/reject/soft-delete) and verified customer feedback.
+- **Revenue Management:** Admin dashboards for auditing payment histories and processing direct transaction refunds.
+- **Cart Abandonment Tracking:** Administrative visibility into unfinished customer carts to analyze drop-off rates and potential recovery.
 - **Workforce Management Toolkit:** Staff-facing shift attendance protocols combined with an HR-approval dashboard for administrative delegates.
-- **Inventory Orchestration:** Administrative interfaces dedicated to stock operations involving low-stock signaling and hidden product states.
-- **Order Processing Pipeline:** Standardized asynchronous state flow mapping cart assembly out to finalized delivery tracking.
-- **Stateless Authentication Protocol:** Decoupled server sessions enforced via encrypted JWT payloads stored securely in local browser APIs.
 
 ## REST API Reference
 
@@ -117,6 +122,7 @@ The `ecommerce_db` layout ensures entity integrity supporting both retail logist
 
 ### Transaction Core (Cart, Orders, Payment)
 - `GET /api/cart` - Retrieve context-aware cart state.
+- `GET /api/cart/all` - Admin tracking for abandoned carts.
 - `POST /api/cart` - Bind product payload to cart instance.
 - `PUT /api/cart/:id` - Patch unit counts inside a cart entity.
 - `DELETE /api/cart/:id` - Drop object from active cart.
@@ -127,8 +133,22 @@ The `ecommerce_db` layout ensures entity integrity supporting both retail logist
 - `GET /api/orders/all` - Dump entire global order log (Administrative only).
 - `POST /api/orders` - Commit transient cart layout into a firm order entity.
 - `PUT /api/orders/:id/status` - Advance lifecycle state assigned to order ID.
+- `GET /api/payment/all` - Administrative financial audit log.
 - `POST /api/payment` - Submit payment confirmation to state machine.
-- `GET /api/payment/order/:id` - Isolate payment metadata tied to a specific order ID.
+- `PATCH /api/payment/:id/refund` - Process secure payment refunds.
+
+### Logistics & Marketing (Shipping, Reviews, Coupons)
+- `GET /api/shipping/all` - Retrieve global shipping ledger.
+- `GET /api/shipping/track/:orderId` - Customer-facing courier tracking payload.
+- `PUT /api/shipping/:id` - Admin update to shipping status and AWB tracking info.
+- `POST /api/reviews/:productId` - Submit customer rating and review.
+- `GET /api/reviews/product/:productId` - Retrieve approved reviews for product display.
+- `GET /api/reviews/all` - Admin dashboard for review moderation.
+- `PUT /api/reviews/:reviewId/status` - Approve or reject pending reviews.
+- `POST /api/coupons/apply` - Validate coupon string and calculate discount dynamically.
+- `GET /api/coupons` - Admin dashboard for global coupon rule set.
+- `POST /api/coupons` - Provision new discount code and usage constraints.
+- `PUT /api/coupons/:id/status` - Soft-delete/deactivate promotional codes.
 
 ### Internal Resources (Attendance Tracker & Leave Administration)
 - `GET /api/leaves` - View pending/resolved PTO requests (Context-aware based on role).
