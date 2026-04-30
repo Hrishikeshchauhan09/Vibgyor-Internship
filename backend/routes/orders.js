@@ -33,7 +33,7 @@ router.get('/all', verifyAdmin, async (req, res) => {
 // POST /api/orders — place a new order
 router.post('/', verifyToken, async (req, res) => {
   try {
-    const { total_amount, shipping_address } = req.body;
+    const { total_amount, shipping_address, coupon_id } = req.body;
     const [result] = await db.query(
       "INSERT INTO orders (user_id, total_amount, shipping_address, status, created_at) VALUES (?, ?, ?, 'pending', NOW())",
       [req.user.userId, total_amount, shipping_address || '']
@@ -43,6 +43,11 @@ router.post('/', verifyToken, async (req, res) => {
       "INSERT INTO shipping (order_id, courier_service, tracking_number, shipping_status, shipping_cost, created_at) VALUES (?, 'Pending Assignment', 'Not assigned', 'Processing', 50.00, NOW())",
       [result.insertId]
     );
+
+    // Increment coupon used_count if a coupon was used
+    if (coupon_id) {
+      await db.query('UPDATE coupons SET used_count = used_count + 1 WHERE coupon_id = ?', [coupon_id]);
+    }
 
     // Clear cart after order
     await db.query('DELETE FROM carts WHERE customer_id = ?', [req.user.userId]);

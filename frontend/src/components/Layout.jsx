@@ -85,6 +85,9 @@ const Layout = () => {
               <NavLink to="/admin/reviews" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
                 <span className="nav-icon">⭐</span> Review Moderation
               </NavLink>
+              <NavLink to="/admin/coupons" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                <span className="nav-icon">🎟️</span> Manage Coupons
+              </NavLink>
               <NavLink to="/leaves" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
                 <span className="nav-icon">📅</span> Leave Requests
               </NavLink>

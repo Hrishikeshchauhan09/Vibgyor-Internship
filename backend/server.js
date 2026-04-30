@@ -12,6 +12,7 @@ const shippingRoutes = require('./routes/shipping');
 const paymentRoutes = require('./routes/payment');
 const customerRoutes = require('./routes/customers');
 const reviewRoutes = require('./routes/reviews');
+const couponRoutes = require('./routes/coupons');
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.use('/api/shipping', shippingRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/coupons', couponRoutes);
 app.use('/api/leaves', require('./routes/leaves'));
 app.use('/api/attendance', require('./routes/attendance'));
 app.use('/api/wishlist', require('./routes/wishlist'));

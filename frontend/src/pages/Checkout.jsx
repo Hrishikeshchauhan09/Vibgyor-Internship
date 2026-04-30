@@ -13,6 +13,31 @@ const Checkout = () => {
   const [addr, setAddr] = useState({ name: '', phone: '', pin: '', flat: '', area: '', city: '', state: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  // Coupon state
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [couponError, setCouponError] = useState('');
+  const [couponSuccess, setCouponSuccess] = useState('');
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setCouponError('');
+    setCouponSuccess('');
+    try {
+      const { data } = await API.post('/coupons/apply', { coupon_code: couponCode, order_total: total });
+      setAppliedCoupon(data);
+      setDiscountAmount(data.discount_amount);
+      setCouponSuccess(data.message);
+    } catch (err) {
+      setCouponError(err.response?.data?.message || 'Invalid coupon code');
+      setAppliedCoupon(null);
+      setDiscountAmount(0);
+    }
+  };
+
+  const finalTotal = (total + 50) - discountAmount;
 
   const handleCheckout = async () => {
     if (!addr.name || !addr.phone || !addr.pin || !addr.flat || !addr.area || !addr.city || !addr.state) {
@@ -27,12 +52,16 @@ const Checkout = () => {
     setLoading(true);
     setError('');
     try {
-      // Place order with shipping cost added
-      const { data: orderData } = await API.post('/orders', { total_amount: total + 50, shipping_address: formattedAddress });
+      // Place order with shipping cost and discount applied
+      const { data: orderData } = await API.post('/orders', { 
+        total_amount: finalTotal, 
+        shipping_address: formattedAddress,
+        coupon_id: appliedCoupon ? appliedCoupon.coupon_id : null
+      });
       // Record payment
       await API.post('/payment', {
         order_id: orderData.orderId,
-        amount: total + 50,
+        amount: finalTotal,
         method,
       });
       navigate('/orders', { replace: true });
@@ -64,9 +93,39 @@ const Checkout = () => {
           <span>Shipping Cost</span>
           <span>₹50.00</span>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '700', fontSize: '1.2rem', color: 'var(--primary)', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+        
+        {discountAmount > 0 && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', color: 'var(--success)' }}>
+            <span>Discount ({appliedCoupon?.discount_type})</span>
+            <span>-₹{parseFloat(discountAmount).toFixed(2)}</span>
+          </div>
+        )}
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '700', fontSize: '1.2rem', color: 'var(--primary)', borderTop: '1px solid var(--border)', paddingTop: '1rem', marginBottom: '1.5rem' }}>
           <span>Total to Pay</span>
-          <span>₹{parseFloat(total + 50).toFixed(2)}</span>
+          <span>₹{parseFloat(finalTotal).toFixed(2)}</span>
+        </div>
+
+        {/* Coupon Section */}
+        <div style={{ background: 'var(--bg-light)', padding: '1rem', borderRadius: 'var(--radius-sm)' }}>
+          <label style={{ fontSize: '0.85rem', fontWeight: '600', display: 'block', marginBottom: '0.5rem' }}>Have a Coupon Code?</label>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <input 
+              type="text" 
+              className="form-control" 
+              placeholder="Enter code" 
+              value={couponCode}
+              onChange={e => setCouponCode(e.target.value.toUpperCase())}
+              disabled={appliedCoupon !== null}
+            />
+            {!appliedCoupon ? (
+              <button className="btn btn-secondary" onClick={handleApplyCoupon} type="button">Apply</button>
+            ) : (
+              <button className="btn btn-danger" onClick={() => { setAppliedCoupon(null); setDiscountAmount(0); setCouponCode(''); setCouponSuccess(''); }} type="button">Remove</button>
+            )}
+          </div>
+          {couponError && <div style={{ color: 'var(--danger)', fontSize: '0.8rem', marginTop: '0.5rem' }}>{couponError}</div>}
+          {couponSuccess && <div style={{ color: 'var(--success)', fontSize: '0.8rem', marginTop: '0.5rem' }}>{couponSuccess}</div>}
         </div>
       </div>
 
@@ -170,7 +229,7 @@ const Checkout = () => {
           onClick={handleCheckout}
           disabled={loading || total === 0}
         >
-          {loading ? 'Processing...' : `✓ Place Order — ₹${parseFloat(total + 50).toFixed(2)}`}
+          {loading ? 'Processing...' : `✓ Place Order — ₹${parseFloat(finalTotal).toFixed(2)}`}
         </button>
       </div>
     </div>
