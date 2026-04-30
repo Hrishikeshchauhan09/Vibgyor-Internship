@@ -39,7 +39,7 @@ router.post('/', verifyToken, async (req, res) => {
       [req.user.userId, total_amount, shipping_address || '']
     );
     // Clear cart after order
-    await db.query('DELETE FROM cart WHERE user_id = ?', [req.user.userId]);
+    await db.query('DELETE FROM carts WHERE customer_id = ?', [req.user.userId]);
     res.status(201).json({ message: 'Order placed successfully.', orderId: result.insertId });
   } catch (err) {
     res.status(500).json({ message: 'Error placing order.' });
