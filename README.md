@@ -15,8 +15,8 @@ This repository is structured into a React client and a highly available REST AP
 ## Live Deployment
 
 This project is fully deployed to the cloud!
-- **Frontend:** [Render Static Site](https://render.com)
-- **Backend API:** [Render Web Service](https://render.com)
+- **Frontend:** [Render Static Site]https://vibgyor-frontend.onrender.com
+- **Backend API:** [Render Web Service]https://vibgyor-backend.onrender.com
 - **Database:** Aiven Free MySQL
 
 To test the live application as an administrator, use:
