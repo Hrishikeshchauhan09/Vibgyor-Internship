@@ -79,6 +79,9 @@ const Layout = () => {
               <NavLink to="/admin/carts" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
                 <span className="nav-icon">🛒</span> Abandoned Carts
               </NavLink>
+              <NavLink to="/admin/shipping" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                <span className="nav-icon">🚚</span> Shipping Tracking
+              </NavLink>
               <NavLink to="/leaves" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
                 <span className="nav-icon">📅</span> Leave Requests
               </NavLink>

@@ -38,6 +38,12 @@ router.post('/', verifyToken, async (req, res) => {
       "INSERT INTO orders (user_id, total_amount, shipping_address, status, created_at) VALUES (?, ?, ?, 'pending', NOW())",
       [req.user.userId, total_amount, shipping_address || '']
     );
+    // Add default shipping entry
+    await db.query(
+      "INSERT INTO shipping (order_id, courier_service, tracking_number, shipping_status, shipping_cost, created_at) VALUES (?, 'Pending Assignment', 'Not assigned', 'Processing', 50.00, NOW())",
+      [result.insertId]
+    );
+
     // Clear cart after order
     await db.query('DELETE FROM carts WHERE customer_id = ?', [req.user.userId]);
     res.status(201).json({ message: 'Order placed successfully.', orderId: result.insertId });

@@ -6,6 +6,8 @@ const Orders = () => {
   const { isAdmin } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [trackingInfo, setTrackingInfo] = useState(null);
+  const [showTrackModal, setShowTrackModal] = useState(false);
 
   const fetchOrders = () => {
     API.get(isAdmin() ? '/orders/all' : '/orders')
@@ -26,6 +28,16 @@ const Orders = () => {
       setOrders(orders.map(o => o.order_id === orderId ? { ...o, status: newStatus } : o));
     } catch (err) {
       alert('Failed to update status');
+    }
+  };
+
+  const handleTrackOrder = async (orderId) => {
+    try {
+      const { data } = await API.get(`/shipping/track/${orderId}`);
+      setTrackingInfo(data);
+      setShowTrackModal(true);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Tracking info not available yet.');
     }
   };
 
@@ -67,6 +79,7 @@ const Orders = () => {
                   <th>Total Amount</th>
                   <th>Status</th>
                   <th>Date Placed</th>
+                  {!isAdmin() && <th>Action</th>}
                 </tr>
               </thead>
               <tbody>
@@ -112,6 +125,13 @@ const Orders = () => {
                       ) : statusBadge(order.status)}
                     </td>
                     <td>{new Date(order.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                    {!isAdmin() && (
+                      <td>
+                        <button className="btn btn-sm btn-secondary" onClick={() => handleTrackOrder(order.order_id)}>
+                          Track Order
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -119,6 +139,36 @@ const Orders = () => {
           </div>
         )}
       </div>
+
+      {showTrackModal && trackingInfo && (
+        <div className="modal-overlay" onClick={() => setShowTrackModal(false)} style={{ zIndex: 10000 }}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px', padding: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h3 style={{ margin: 0 }}>Track Order #{trackingInfo.order_id}</h3>
+              <button onClick={() => setShowTrackModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
+            </div>
+            
+            <div style={{ background: 'var(--bg-light)', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Status:</span>
+                <span style={{ fontWeight: 'bold', color: 'var(--primary)' }}>{trackingInfo.shipping_status}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Courier:</span>
+                <span style={{ fontWeight: '600' }}>{trackingInfo.courier_service}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Tracking AWB:</span>
+                <span style={{ fontWeight: '600', fontFamily: 'monospace' }}>{trackingInfo.tracking_number}</span>
+              </div>
+            </div>
+            
+            <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setShowTrackModal(false)}>
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

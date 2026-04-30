@@ -27,12 +27,12 @@ const Checkout = () => {
     setLoading(true);
     setError('');
     try {
-      // Place order
-      const { data: orderData } = await API.post('/orders', { total_amount: total, shipping_address: formattedAddress });
+      // Place order with shipping cost added
+      const { data: orderData } = await API.post('/orders', { total_amount: total + 50, shipping_address: formattedAddress });
       // Record payment
       await API.post('/payment', {
         order_id: orderData.orderId,
-        amount: total,
+        amount: total + 50,
         method,
       });
       navigate('/orders', { replace: true });
@@ -56,9 +56,17 @@ const Checkout = () => {
 
       <div className="card" style={{ marginBottom: '1.5rem' }}>
         <h3 style={{ fontWeight: '700', marginBottom: '1rem' }}>Order Summary</h3>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '700', fontSize: '1.2rem', color: 'var(--primary)' }}>
-          <span>Total to Pay</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
+          <span>Subtotal</span>
           <span>₹{parseFloat(total).toFixed(2)}</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', color: 'var(--text-secondary)' }}>
+          <span>Shipping Cost</span>
+          <span>₹50.00</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '700', fontSize: '1.2rem', color: 'var(--primary)', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+          <span>Total to Pay</span>
+          <span>₹{parseFloat(total + 50).toFixed(2)}</span>
         </div>
       </div>
 
@@ -162,7 +170,7 @@ const Checkout = () => {
           onClick={handleCheckout}
           disabled={loading || total === 0}
         >
-          {loading ? 'Processing...' : `✓ Place Order — ₹${parseFloat(total).toFixed(2)}`}
+          {loading ? 'Processing...' : `✓ Place Order — ₹${parseFloat(total + 50).toFixed(2)}`}
         </button>
       </div>
     </div>

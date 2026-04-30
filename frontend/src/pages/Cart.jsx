@@ -91,12 +91,12 @@ const Cart = () => {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
               <span>Shipping</span>
-              <span style={{ color: 'var(--success)', fontWeight: '600' }}>Free</span>
+              <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>₹50.00</span>
             </div>
             <hr style={{ margin: '1rem 0', borderColor: 'var(--border)' }} />
             <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '700', fontSize: '1.1rem', marginBottom: '1.5rem' }}>
               <span>Total</span>
-              <span style={{ color: 'var(--primary)' }}>₹{total.toFixed(2)}</span>
+              <span style={{ color: 'var(--primary)' }}>₹{(total + 50).toFixed(2)}</span>
             </div>
             <button
               id="proceed-checkout-btn"
