@@ -72,12 +72,18 @@ router.post('/apply', verifyToken, async (req, res) => {
       return res.status(400).json({ message: 'This coupon is inactive or expired.' });
     }
 
-    // Check dates
+    // Check dates with a 24-hour buffer to prevent timezone mismatch issues
     const now = new Date();
-    if (new Date(coupon.valid_from) > now) {
-      return res.status(400).json({ message: 'This coupon is not valid yet.' });
+    const validFrom = new Date(coupon.valid_from);
+    validFrom.setHours(validFrom.getHours() - 24); // Buffer for timezone
+    
+    const validTo = new Date(coupon.valid_to);
+    validTo.setHours(validTo.getHours() + 24); // Buffer for timezone
+
+    if (validFrom > now) {
+      return res.status(400).json({ message: 'This coupon is not valid yet (Timezone difference).' });
     }
-    if (new Date(coupon.valid_to) < now) {
+    if (validTo < now) {
       return res.status(400).json({ message: 'This coupon has expired.' });
     }
 
